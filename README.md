@@ -1,43 +1,79 @@
-# Terravision-Greenhouse-DigitalTwin 🌿
+# TERRAVISION V2.0 — Digital Twin 🌿
 
-An AI-Assisted Closed-Loop Intelligent Sustainable Farming Ecosystem tailored for micro-climates like Kamrup, Assam.
+A Python-based software continuation of TERRAVISION, a collaborative Arduino
+smart greenhouse project. This repository contains a greenhouse simulation
+that is an early step towards exploring digital twin concepts. It is not
+connected to the original physical greenhouse or its sensors.
 
----
+## Project Progression
 
-## 🏆 Project Overview & Exhibition Background
-* **Project Name:** TERRAVISION
-* **Achievement:** 1st Place at the Cluster Science Exhibition 
-* **Institution:** Jawahar Navodaya Vidyalaya (JNV), Rangia, Kamrup, Assam
-* **Core Concept:** This project transitions from a physical Arduino/microcontroller prototype into a robust **Digital Twin Simulation** on GitHub. It models real-time environmental telemetry and automated closed-loop agricultural control systems.
+- **V1.0 — TERRAVISION: Smart Greenhouse:** The original team-built physical
+  greenhouse project, developed for the JNV Cluster Science Exhibition.
+- **V2.0 — TERRAVISION: Digital Twin:** A software continuation exploring
+  simulated greenhouse readings and simple automated-control rules.
 
----
+**Original project:** [Smart-Greenhouse-IOT](https://github.com/Ronny-Labs/Smart-Greenhouse-IOT)
 
-## 🔬 System Architecture & Scientific Principles
-The digital twin models real-world greenhouse dynamics using two primary software modules:
+## V1.0: Original Team Project
 
-1. **`SensorModule`:**
-   * Simulates continuous physical sensor feeds for regional micro-climates (Kamrup, Assam).
-   * Tracks **Soil Moisture (VWC %)**, **Temperature (°C)**, **Relative Humidity (% RH)**, and **Ambient Light (Lux/LDR index)**.
-   * Introduces controlled randomized environmental fluctuations to test system resilience.
+TERRAVISION V1.0 was a collaborative Arduino-based smart greenhouse project
+developed for the JNV Cluster Science Exhibition. The team received 1st place.
 
-2. **`TerravisionMCU` (Microcontroller Logic):**
-   * Mimics an ATmega328P / Arduino Uno controller architecture.
-   * Enforces strict **Embedded Hysteresis Control** thresholds to prevent relay chatter and optimize energy/resource usage:
-     * **Hydration Loop:** Triggers micro-drip water pump (`RELAY_1_PUMP`) when soil moisture drops below **30.0% VWC**.
-     * **Thermal Regulation Loop:** Triggers heating element (`RELAY_HEATER`) when temperature drops below **18.0°C** (frost defense).
-     * **Ventilation & Humidity Loop:** Triggers exhaust fan (`RELAY_2_FAN`) if temperature exceeds **35.0°C** or relative humidity exceeds **85.0% RH**.
-     * **Photoperiod Loop:** Triggers supplemental PAR spectrum grow lights (`RELAY_3_LED`) if ambient light falls below **300.0 index**.
+My primary contribution was the physical construction and hardware integration
+of the greenhouse prototype. I also assisted with research, project information
+materials, and documentation. Through the project, I gained practical exposure
+to electronic components, sensors, relay modules, wiring, and soldering. I also
+learned about the software and control-logic side through collaboration with
+teammates.
 
-## 👥 Team & Contribution
-* Developed as part of a collaborative team project for the JNV Cluster Exhibition.
-* Contributed to the Python software simulation, logic flow, and repository documentation.
+## V2.0: Current Implementation
 
----
+The repository currently includes `terravision_twin.py`, a small greenhouse
+simulation that:
 
-## 🚀 How to Run the Digital Twin
-1. Ensure you have Python installed along with `numpy`.
-2. Place the `terravision_twin.py` script in your repository directory.
-3. Run the simulation script from your terminal:
-   ```bash
-   python terravision_twin.py
-  
+- Generates changing, randomized values for soil moisture, temperature,
+  humidity, and a light index.
+- Applies simple threshold rules to produce simulated pump, fan, LED, and
+  heater states.
+- Estimates VPD using the simulated temperature and humidity.
+- Prints five simulation cycles to the terminal.
+
+This is a greenhouse simulation and an early step towards a digital twin; it
+does not connect to the physical prototype or its sensors. The readings are
+simulated, and the actuator states do not control real equipment. The light
+reading is an index, not a PAR measurement. The script's thresholds and
+starting values are illustrative and are not validated growing recommendations.
+The VPD value is an estimate calculated from simulated temperature and humidity;
+it has not been validated for agricultural use.
+
+The control rules currently use single thresholds. They do not implement
+hysteresis. The script also does not currently include a dashboard, data
+logging, hardware connection, or AI/ML features.
+
+## Run the Simulation
+
+Requires Python 3. No third-party packages are needed.
+
+```bash
+python terravision_twin.py
+```
+
+The script prints five cycles, with a short pause between cycles.
+
+## Planned Development
+
+Future work may include:
+
+- Making the simulated environmental changes more realistic and configurable.
+- Recording readings to a file and visualizing trends.
+- Building a dashboard for the simulation.
+- Exploring how a software model could represent the physical greenhouse.
+- Investigating data analysis or AI-based features after the simulation and
+  data are developed further.
+- Exploring sensor or microcontroller integration as a separate future step.
+
+These are plans, not completed features.
+
+## Project Status
+
+**Basic greenhouse simulation implemented; further development planned.**
