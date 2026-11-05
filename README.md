@@ -28,6 +28,10 @@ The digital twin models real-world greenhouse dynamics using two primary softwar
      * **Ventilation & Humidity Loop:** Triggers exhaust fan (`RELAY_2_FAN`) if temperature exceeds **35.0°C** or relative humidity exceeds **85.0% RH**.
      * **Photoperiod Loop:** Triggers supplemental PAR spectrum grow lights (`RELAY_3_LED`) if ambient light falls below **300.0 index**.
 
+## 👥 Team & Contribution
+* Developed as part of a collaborative team project for the JNV Cluster Exhibition.
+* Contributed to the Python software simulation, logic flow, and repository documentation.
+
 ---
 
 ## 🚀 How to Run the Digital Twin
