@@ -4,24 +4,25 @@ import math
 
 class SensorModule:
     """
-    Simulates physical greenhouse sensors (Soil Moisture, Temperature, Humidity, and Light).
-    Tailored for micro-climates like Kamrup, Assam.
+    Generates simulated soil-moisture, temperature, humidity, and light readings.
+    These are not measurements from physical sensors or a region-specific
+    climate model.
     """
     def __init__(self):
-        # Initial baseline environmental values
-        self.soil_moisture_vwc = 35.0  # Volumetric Water Content (%)
+        # Illustrative starting values for the simulation
+        self.soil_moisture_vwc = 35.0  # Illustrative simulated soil-moisture value (%)
         self.temperature_c = 26.5      # Temperature in Celsius
         self.humidity_pct = 70.0       # Relative Humidity (%)
-        self.light_index = 450.0       # Ambient light index (LDR)
+        self.light_index = 450.0       # Simulated light index, not a PAR measurement
 
     def read_telemetry(self):
-        """Introduces minor real-world fluctuations to simulate environmental dynamics."""
+        """Adds randomized changes to the simulated readings."""
         self.soil_moisture_vwc += random.uniform(-1.5, 1.0)
         self.temperature_c += random.uniform(-0.5, 0.5)
         self.humidity_pct += random.uniform(-2.0, 2.0)
         self.light_index += random.uniform(-20, 20)
 
-        # Keep values within realistic physical bounds
+        # Keep soil moisture, humidity, and light within configured bounds
         self.soil_moisture_vwc = max(0.0, min(100.0, self.soil_moisture_vwc))
         self.humidity_pct = max(10.0, min(100.0, self.humidity_pct))
         self.light_index = max(0.0, self.light_index)
@@ -36,11 +37,12 @@ class SensorModule:
 
 class TerravisionMCU:
     """
-    Simulates an ATmega328P / Arduino Uno microcontroller.
-    Evaluates live telemetry against hysteresis thresholds and controls actuators.
+    Applies single-threshold rules to simulated readings and returns simulated
+    actuator states. It does not connect to a physical microcontroller or
+    control real equipment; the rules do not implement hysteresis.
     """
     def __init__(self):
-        # Actuator relay states (False = OFF, True = ON)
+        # Simulated actuator states (False = OFF, True = ON)
         self.relay_pump = False
         self.relay_fan = False
         self.relay_led = False
@@ -48,8 +50,9 @@ class TerravisionMCU:
 
     def calculate_vpd(self, temp_c, humidity_pct):
         """
-        Calculates Vapor Pressure Deficit (VPD) in kilopascals (kPa) using the Tetens equation.
-        Ideal range for most crops: 0.8 kPa to 1.2 kPa.
+        Estimates Vapor Pressure Deficit (VPD) in kilopascals (kPa) from the
+        supplied temperature and humidity using the Tetens equation. This
+        estimate is not validated for agricultural use.
         """
         svp = 0.61078 * math.exp((17.27 * temp_c) / (temp_c + 237.3))
         avp = svp * (humidity_pct / 100.0)
@@ -57,25 +60,25 @@ class TerravisionMCU:
         return round(vpd, 3)
 
     def evaluate_control_logic(self, telemetry):
-        """Applies strict threshold rules to trigger greenhouse actuators."""
+        """Uses single thresholds to calculate simulated actuator states."""
         temp = telemetry["temperature"]
         humidity = telemetry["humidity"]
         moisture = telemetry["soil_moisture"]
         light = telemetry["light"]
 
-        # 1. Hydration Loop: Water pump triggers if soil moisture drops below 30.0% VWC
+        # 1. Simulated pump state is ON below the illustrative moisture threshold
         self.relay_pump = moisture < 30.0
 
-        # 2. Thermal Regulation Loop: Heater triggers if temp drops below 18.0°C
+        # 2. Simulated heater state is ON below the illustrative temperature threshold
         self.relay_heater = temp < 18.0
 
-        # 3. Ventilation & Humidity Loop: Fan triggers if temp > 35.0°C or humidity > 85.0%
+        # 3. Simulated fan state is ON above either illustrative threshold
         self.relay_fan = (temp > 35.0) or (humidity > 85.0)
 
-        # 4. Photoperiod Loop: PAR LED grow lights trigger if light drops below 300.0
+        # 4. Simulated LED state uses a light-index threshold; the index is not PAR
         self.relay_led = light < 300.0
 
-        # Calculate live VPD
+        # Estimate VPD from the simulated temperature and humidity
         current_vpd = self.calculate_vpd(temp, humidity)
 
         return {
@@ -95,18 +98,18 @@ if __name__ == "__main__":
     sensors = SensorModule()
     mcu = TerravisionMCU()
 
-    # Run a 5-cycle simulation test
+    # Run five simulation cycles
     for cycle in range(1, 6):
         print(f"\n--- Simulation Cycle {cycle} ---")
         
-        # Get live data from sensors
+        # Generate simulated readings
         telemetry = sensors.read_telemetry()
         print(f"📊 Telemetry -> Soil Moisture: {telemetry['soil_moisture']}% | "
               f"Temp: {telemetry['temperature']}°C | "
               f"Humidity: {telemetry['humidity']}% | "
               f"Light: {telemetry['light']}")
 
-        # Evaluate MCU control actions and VPD
+        # Calculate simulated actuator states and estimate VPD
         actions = mcu.evaluate_control_logic(telemetry)
         print(f"🤖 MCU Actions -> Pump: {'ON' if actions['pump'] else 'OFF'} | "
               f"Fan: {'ON' if actions['fan'] else 'OFF'} | "
