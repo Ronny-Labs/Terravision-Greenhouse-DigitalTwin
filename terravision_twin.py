@@ -37,9 +37,9 @@ class SensorModule:
 
 class TerravisionMCU:
     """
-    Applies single-threshold rules to simulated readings and returns simulated
+    Applies hysteresis rules to simulated readings and returns simulated
     actuator states. It does not connect to a physical microcontroller or
-    control real equipment; the rules do not implement hysteresis.
+    control real equipment.
     """
     def __init__(self):
         # Simulated actuator states (False = OFF, True = ON)
@@ -60,23 +60,44 @@ class TerravisionMCU:
         return round(vpd, 3)
 
     def evaluate_control_logic(self, telemetry):
-        """Uses single thresholds to calculate simulated actuator states."""
+        """Update simulated actuator states using ON/OFF hysteresis thresholds."""
         temp = telemetry["temperature"]
         humidity = telemetry["humidity"]
         moisture = telemetry["soil_moisture"]
         light = telemetry["light"]
 
-        # 1. Simulated pump state is ON below the illustrative moisture threshold
-        self.relay_pump = moisture < 30.0
+        # Hysteresis uses different switching thresholds in each direction.
+        # Once ON, an actuator stays ON through the deadband; once OFF, it
+        # stays OFF through the deadband. This avoids rapid threshold chatter.
 
-        # 2. Simulated heater state is ON below the illustrative temperature threshold
-        self.relay_heater = temp < 18.0
+        # Pump: turn ON below 30% moisture; once ON, turn OFF at 35% or above.
+        if self.relay_pump:
+            if moisture >= 35.0:
+                self.relay_pump = False
+        elif moisture < 30.0:
+            self.relay_pump = True
 
-        # 3. Simulated fan state is ON above either illustrative threshold
-        self.relay_fan = (temp > 35.0) or (humidity > 85.0)
+        # Heater: turn ON below 18°C; once ON, turn OFF at 20°C or above.
+        if self.relay_heater:
+            if temp >= 20.0:
+                self.relay_heater = False
+        elif temp < 18.0:
+            self.relay_heater = True
 
-        # 4. Simulated LED state uses a light-index threshold; the index is not PAR
-        self.relay_led = light < 300.0
+        # Fan: turn ON above either ON threshold. Turn OFF only after both
+        # readings have fallen to their OFF thresholds or lower.
+        if self.relay_fan:
+            if temp <= 32.0 and humidity <= 80.0:
+                self.relay_fan = False
+        elif temp > 35.0 or humidity > 85.0:
+            self.relay_fan = True
+
+        # LED: thresholds apply to the light index, which is not a PAR reading.
+        if self.relay_led:
+            if light >= 350.0:
+                self.relay_led = False
+        elif light < 300.0:
+            self.relay_led = True
 
         # Estimate VPD from the simulated temperature and humidity
         current_vpd = self.calculate_vpd(temp, humidity)
