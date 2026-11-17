@@ -2,30 +2,78 @@ import time
 import random
 import math
 
+
 class SensorModule:
     """
-    Generates simulated soil-moisture, temperature, humidity, and light readings.
-    These are not measurements from physical sensors or a region-specific
-    climate model.
+    Maintains a simplified illustrative greenhouse environment and reports
+    simulated soil-moisture, temperature, humidity, and light readings.
+
+    This is not a scientifically validated greenhouse model. It does not
+    represent physical sensors, a specific greenhouse, or calibrated rates.
     """
     def __init__(self):
-        # Illustrative starting values for the simulation
-        self.soil_moisture_vwc = 35.0  # Illustrative simulated soil-moisture value (%)
+        # Illustrative starting values for the simulation.
+        self.soil_moisture_vwc = 35.0  # Simulated soil-moisture value (%)
         self.temperature_c = 26.5      # Temperature in Celsius
-        self.humidity_pct = 70.0       # Relative Humidity (%)
+        self.humidity_pct = 70.0       # Relative humidity (%)
         self.light_index = 450.0       # Simulated light index, not a PAR measurement
 
-    def read_telemetry(self):
-        """Adds randomized changes to the simulated readings."""
-        self.soil_moisture_vwc += random.uniform(-1.5, 1.0)
-        self.temperature_c += random.uniform(-0.5, 0.5)
-        self.humidity_pct += random.uniform(-2.0, 2.0)
-        self.light_index += random.uniform(-20, 20)
+        # Configurable random drift ranges applied once per cycle. These small
+        # per-cycle changes are illustrative, not calibrated environmental rates.
+        self.soil_drift_range = (-0.15, 0.05)
+        self.temperature_drift_range = (-0.15, 0.15)
+        self.humidity_drift_range = (-0.5, 0.5)
+        self.light_drift_range = (-20.0, 20.0)
 
-        # Keep soil moisture, humidity, and light within configured bounds
+        # Illustrative actuator effects applied once per cycle, not instantaneous
+        # real-world rates or recommendations.
+        self.pump_moisture_increase = 0.3
+        self.fan_temperature_decrease = 0.25
+        self.fan_humidity_decrease = 0.5
+        self.heater_temperature_increase = 0.3
+        self.led_temperature_increase = 0.05
+
+    def _apply_environment_drift(self):
+        """Apply configurable small random environmental changes once per cycle."""
+        self.soil_moisture_vwc += random.uniform(*self.soil_drift_range)
+        self.temperature_c += random.uniform(*self.temperature_drift_range)
+        self.humidity_pct += random.uniform(*self.humidity_drift_range)
+        self.light_index += random.uniform(*self.light_drift_range)
+
+    def _apply_actuator_effects(self, actuator_states):
+        """Apply the previous cycle's actuator effects once to this cycle's state."""
+        if actuator_states["fan"]:
+            self.temperature_c -= self.fan_temperature_decrease
+            # Fan-driven humidity reduction is an illustrative assumption for
+            # this simplified model, not a validated ventilation calculation.
+            self.humidity_pct -= self.fan_humidity_decrease
+
+        if actuator_states["heater"]:
+            self.temperature_c += self.heater_temperature_increase
+
+        if actuator_states["pump"]:
+            self.soil_moisture_vwc += self.pump_moisture_increase
+
+        # LED activation contributes only a small illustrative heat effect.
+        if actuator_states["led"]:
+            self.temperature_c += self.led_temperature_increase
+
+    def _bound_environment(self):
+        """Clamp simulated environmental variables to configured sensible bounds."""
         self.soil_moisture_vwc = max(0.0, min(100.0, self.soil_moisture_vwc))
+        self.temperature_c = max(10.0, min(45.0, self.temperature_c))
         self.humidity_pct = max(10.0, min(100.0, self.humidity_pct))
-        self.light_index = max(0.0, self.light_index)
+        self.light_index = max(0.0, min(1000.0, self.light_index))
+
+    def read_telemetry(self, previous_actuator_states):
+        """Advance the environment once, then return readings from its new state.
+
+        Actuator effects use the states from the preceding cycle. The first
+        cycle passes all-OFF states, so no actuator effects are applied then.
+        """
+        self._apply_environment_drift()
+        self._apply_actuator_effects(previous_actuator_states)
+        self._bound_environment()
 
         return {
             "soil_moisture": round(self.soil_moisture_vwc, 2),
@@ -119,24 +167,41 @@ if __name__ == "__main__":
     sensors = SensorModule()
     mcu = TerravisionMCU()
 
+    # Start with every actuator OFF. States calculated in one cycle are used
+    # to update the environment at the beginning of the next cycle.
+    previous_actuator_states = {
+        "pump": False,
+        "fan": False,
+        "led": False,
+        "heater": False,
+    }
+
     # Run five simulation cycles
     for cycle in range(1, 6):
         print(f"\n--- Simulation Cycle {cycle} ---")
-        
-        # Generate simulated readings
-        telemetry = sensors.read_telemetry()
+
+        # Update the environment once using prior-cycle states, then read it.
+        telemetry = sensors.read_telemetry(previous_actuator_states)
         print(f"📊 Telemetry -> Soil Moisture: {telemetry['soil_moisture']}% | "
               f"Temp: {telemetry['temperature']}°C | "
               f"Humidity: {telemetry['humidity']}% | "
               f"Light: {telemetry['light']}")
 
-        # Calculate simulated actuator states and estimate VPD
+        # Evaluate control from current readings; these states affect next cycle.
         actions = mcu.evaluate_control_logic(telemetry)
         print(f"🤖 MCU Actions -> Pump: {'ON' if actions['pump'] else 'OFF'} | "
               f"Fan: {'ON' if actions['fan'] else 'OFF'} | "
               f"LED: {'ON' if actions['led'] else 'OFF'} | "
               f"Heater: {'ON' if actions['heater'] else 'OFF'}")
         print(f"💨 Calculated VPD: {actions['vpd_kPa']} kPa")
+
+        # Save only actuator states for the next environment update.
+        previous_actuator_states = {
+            "pump": actions["pump"],
+            "fan": actions["fan"],
+            "led": actions["led"],
+            "heater": actions["heater"],
+        }
 
         # Small delay between simulation ticks
         time.sleep(0.5)
