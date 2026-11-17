@@ -10,8 +10,8 @@ connected to the original physical greenhouse or its sensors.
 - **V1.0 — TERRAVISION: Smart Greenhouse:** The original team-built physical
   greenhouse project, developed for the JNV Cluster Science Exhibition.
 - **V2.0 — TERRAVISION: Digital Twin:** A software continuation exploring
-  simulated greenhouse readings and hysteresis-based control logic for
-  actuator states.
+  simulated greenhouse readings, hysteresis-based actuator control, and
+  illustrative environmental feedback.
 
 **Original project:** [Smart-Greenhouse-IOT](https://github.com/Ronny-Labs/Smart-Greenhouse-IOT)
 
@@ -29,29 +29,40 @@ teammates.
 
 ## V2.0: Current Implementation
 
-The repository currently includes `terravision_twin.py`, a small greenhouse
-simulation that:
+The repository currently includes `terravision_twin.py`, a small simulation
+that maintains evolving values for soil moisture, temperature, humidity, and a
+light index. Each cycle applies configurable randomized environmental drift
+and the previous cycle's actuator states once, then generates readings from
+the updated environment. The model also bounds the simulated environmental
+values.
 
-- Generates changing, randomized values for soil moisture, temperature,
-  humidity, and a light index.
-- Applies hysteresis-based control logic to produce simulated pump, fan, LED,
-  and heater states.
-- Maintains actuator states between cycles so each device remains ON or OFF
-  through its own deadband until its opposite threshold is reached.
-- Estimates VPD using the simulated temperature and humidity.
-- Prints five simulation cycles to the terminal.
+The illustrative actuator effects applied once per simulation cycle are:
 
-This is a greenhouse simulation and an early step towards a digital twin; it
-does not connect to the physical prototype or its sensors. The readings are
-simulated, and the actuator states do not control real equipment. The light
-reading is an index, not a PAR measurement. The script's thresholds and
-starting values are illustrative and are not validated growing recommendations.
-The VPD value is an estimate calculated from simulated temperature and humidity;
-it has not been validated for agricultural use.
+- **Pump:** increases simulated soil moisture.
+- **Fan:** decreases simulated temperature and humidity. The humidity reduction
+  is an illustrative assumption.
+- **Heater:** increases simulated temperature.
+- **LED:** contributes a small simulated heat effect.
 
-The control logic uses separate ON and OFF thresholds for each actuator rather
-than a single fixed threshold. This prevents rapid switching around the control
-boundary while preserving the existing simulation structure and terminal output.
+The actuator states are calculated from the current readings using hysteresis
+control and influence the environment on the following cycle. The simulation
+also estimates VPD from simulated temperature and humidity and prints five
+cycles to the terminal.
+
+This is a simplified illustrative simulation, not a scientifically validated
+greenhouse model. Its actuator-effect values and environmental drift are not
+calibrated real-world rates or growing recommendations. The environmental
+feedback uses simplified fixed effects and does not model complex interactions
+between greenhouse variables. Readings are simulated; the actuator states do not
+control real equipment, and the script does not connect to the physical
+prototype or its sensors. The light reading is an index, not a PAR measurement.
+VPD is an estimate and has not been validated for agricultural use. The script
+does not include AI/ML features, a dashboard, data logging, or hardware
+integration.
+
+The control logic uses separate ON and OFF thresholds for each actuator. This
+prevents rapid switching around the control boundary while preserving actuator
+states through their deadbands.
 
 ### Hysteresis Control Behavior
 
@@ -70,9 +81,6 @@ The actuator rules are intentionally simple and illustrative:
 These deadbands allow actuator states to persist through their respective
 operating ranges and reduce rapid ON/OFF chatter around threshold values.
 
-The script does not currently include a dashboard, data logging, hardware
-connection, physics feedback, or AI/ML features.
-
 ## Run the Simulation
 
 Requires Python 3. No third-party packages are needed.
@@ -88,19 +96,15 @@ The script prints five cycles, with a short pause between cycles.
 Future work may include:
 
 - Making the simulated environmental changes more realistic and configurable.
-- Recording readings to a file and visualizing trends.
+- Recording readings to a file, including CSV logging, and visualizing trends.
 - Building a dashboard for the simulation.
-- Exploring how a software model could represent the physical greenhouse.
-- Investigating data analysis features after the simulation and data are
-  developed further.
+- Exploring how a software model could better represent the physical greenhouse.
 - Exploring sensor or microcontroller integration as a separate future step.
-- Adding physics-based feedback between simulated environmental conditions
-  and actuator effects as future work.
-- Implementing CSV logging for simulation data as future work.
 
 These are plans, not completed features.
 
 ## Project Status
 
 **Basic greenhouse simulation implemented with hysteresis-based simulated
-actuator control; further development planned.**
+actuator control and illustrative environmental feedback; further development
+planned.**
